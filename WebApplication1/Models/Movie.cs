@@ -4,7 +4,6 @@ namespace WebApplication1.Models
 {
     public class Movie
     {
-        [Key]
         public int Id { get; set; }
 
         [Required]
@@ -15,8 +14,15 @@ namespace WebApplication1.Models
         [MaxLength(50)]
         public string Genre { get; set; } = string.Empty;
 
+        [Range(0.01, 10000.00)]
         public decimal Price { get; set; }
 
         public DateTime ReleaseDate { get; set; }
+
+        // Foreign Key
+        public int DirectorId { get; set; }
+
+        // Navigation property
+        public Director? Director { get; set; }
     }
 }
