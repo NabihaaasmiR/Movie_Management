@@ -5,14 +5,16 @@ using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register DbContext with SQL Server
+// 1. Register DbContext with SQL Server connection string
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register Repository and Service for Dependency Injection
+// 2. Register Repositories and Services for Dependency Injection
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<MovieService>();
+builder.Services.AddScoped<ConsoleMenuService>();
 
+// Optional: Keep API controllers and Swagger configured if you switch back to Web API later
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -29,4 +31,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+// 3. Run the Interactive Console Menu Loop on startup
+using (var scope = app.Services.CreateScope())
+{
+    var menuService = scope.ServiceProvider.GetRequiredService<ConsoleMenuService>();
+    await menuService.RunAsync();
+}
