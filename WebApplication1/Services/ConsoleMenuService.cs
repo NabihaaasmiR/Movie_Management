@@ -1,4 +1,5 @@
-﻿using WebApplication1.Models;
+﻿using WebApplication1.Data;
+using WebApplication1.Models;
 using WebApplication1.Services;
 
 namespace WebApplication1.Services
@@ -6,10 +7,12 @@ namespace WebApplication1.Services
     public class ConsoleMenuService
     {
         private readonly MovieService _movieService;
+        private readonly ApplicationDbContext _context; // Direct context or service for directors/actors
 
-        public ConsoleMenuService(MovieService movieService)
+        public ConsoleMenuService(MovieService movieService, ApplicationDbContext context)
         {
             _movieService = movieService;
+            _context = context;
         }
 
         public async Task RunAsync()
@@ -21,13 +24,11 @@ namespace WebApplication1.Services
                 Console.WriteLine("========================================");
                 Console.WriteLine("       MOVIE MANAGEMENT SYSTEM          ");
                 Console.WriteLine("========================================");
-                Console.WriteLine("1. View All Movies");
-                Console.WriteLine("2. Find Movie by ID");
-                Console.WriteLine("3. Add New Movie");
-                Console.WriteLine("4. Update Movie");
-                Console.WriteLine("5. Delete Movie");
-                Console.WriteLine("6. Exit");
-                Console.Write("\nSelect an option (1-6): ");
+                Console.WriteLine("1. Manage Movies (CRUD)");
+                Console.WriteLine("2. Manage Directors");
+                Console.WriteLine("3. Manage Actors");
+                Console.WriteLine("4. Exit");
+                Console.Write("\nSelect an option (1-4): ");
 
                 var choice = Console.ReadLine();
                 Console.WriteLine();
@@ -35,21 +36,15 @@ namespace WebApplication1.Services
                 switch (choice)
                 {
                     case "1":
-                        await ViewAllMoviesAsync();
+                        await ManageMoviesMenuAsync();
                         break;
                     case "2":
-                        await FindMovieByIdAsync();
+                        await ManageDirectorsMenuAsync();
                         break;
                     case "3":
-                        await AddMovieAsync();
+                        await ManageActorsMenuAsync();
                         break;
                     case "4":
-                        await UpdateMovieAsync();
-                        break;
-                    case "5":
-                        await DeleteMovieAsync();
-                        break;
-                    case "6":
                         exit = true;
                         Console.WriteLine("Exiting application. Goodbye!");
                         break;
@@ -61,123 +56,75 @@ namespace WebApplication1.Services
             }
         }
 
-        private async Task ViewAllMoviesAsync()
+        private async Task ManageMoviesMenuAsync()
         {
-            Console.WriteLine("--- All Movies ---");
-            var movies = await _movieService.GetMoviesAsync();
-            foreach (var m in movies)
+            bool back = false;
+            while (!back)
             {
-                Console.WriteLine($"ID: {m.Id} | Title: {m.Title} | Genre: {m.Genre} | Price: ${m.Price:F2} | Released: {m.ReleaseDate:yyyy-MM-dd}");
+                Console.Clear();
+                Console.WriteLine("--- Movie Management ---");
+                Console.WriteLine("1. View All Movies");
+                Console.WriteLine("2. Add New Movie");
+                Console.WriteLine("3. Back to Main Menu");
+                Console.Write("\nSelect an option: ");
+
+                var choice = Console.ReadLine();
+                switch (choice)
+                {
+                    case "1":
+                        var movies = await _movieService.GetMoviesAsync();
+                        foreach (var m in movies)
+                        {
+                            Console.WriteLine($"ID: {m.Id} | Title: {m.Title} | Genre: {m.Genre} | Price: ${m.Price:F2}");
+                        }
+                        Console.WriteLine("\nPress any key to continue...");
+                        Console.ReadKey();
+                        break;
+                    case "2":
+                        Console.Write("Title: ");
+                        var title = Console.ReadLine() ?? string.Empty;
+                        Console.Write("Genre: ");
+                        var genre = Console.ReadLine() ?? string.Empty;
+                        Console.Write("Price: ");
+                        decimal.TryParse(Console.ReadLine(), out decimal price);
+                        Console.Write("Director ID: ");
+                        int.TryParse(Console.ReadLine(), out int directorId);
+
+                        var movie = new Movie
+                        {
+                            Title = title,
+                            Genre = genre,
+                            Price = price,
+                            ReleaseDate = DateTime.Now,
+                            DirectorId = directorId
+                        };
+
+                        await _movieService.CreateMovieAsync(movie);
+                        Console.WriteLine("Movie added successfully! Press any key...");
+                        Console.ReadKey();
+                        break;
+                    case "3":
+                        back = true;
+                        break;
+                }
             }
-            Console.WriteLine("\nPress any key to return to menu...");
+        }
+
+        private async Task ManageDirectorsMenuAsync()
+        {
+            Console.Clear();
+            Console.WriteLine("--- Director Management ---");
+            Console.WriteLine("1. View Directors (Placeholder)");
+            Console.WriteLine("Press any key to return...");
             Console.ReadKey();
         }
 
-        private async Task FindMovieByIdAsync()
+        private async Task ManageActorsMenuAsync()
         {
-            Console.Write("Enter Movie ID: ");
-            if (int.TryParse(Console.ReadLine(), out int id))
-            {
-                var m = await _movieService.GetMovieAsync(id);
-                if (m != null)
-                {
-                    Console.WriteLine($"\nFound: ID: {m.Id} | Title: {m.Title} | Genre: {m.Genre} | Price: ${m.Price:F2} | Released: {m.ReleaseDate:yyyy-MM-dd}");
-                }
-                else
-                {
-                    Console.WriteLine("Movie not found.");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Invalid ID format.");
-            }
-            Console.WriteLine("\nPress any key to return to menu...");
-            Console.ReadKey();
-        }
-
-        private async Task AddMovieAsync()
-        {
-            Console.WriteLine("--- Add New Movie ---");
-            Console.Write("Title: ");
-            var title = Console.ReadLine() ?? string.Empty;
-
-            Console.Write("Genre: ");
-            var genre = Console.ReadLine() ?? string.Empty;
-
-            Console.Write("Price: ");
-            decimal.TryParse(Console.ReadLine(), out decimal price);
-
-            var movie = new Movie
-            {
-                Title = title,
-                Genre = genre,
-                Price = price,
-                ReleaseDate = DateTime.Now
-            };
-
-            await _movieService.CreateMovieAsync(movie);
-            Console.WriteLine("\nMovie added successfully!");
-            Console.WriteLine("Press any key to return to menu...");
-            Console.ReadKey();
-        }
-
-        private async Task UpdateMovieAsync()
-        {
-            Console.Write("Enter Movie ID to update: ");
-            if (int.TryParse(Console.ReadLine(), out int id))
-            {
-                var movie = await _movieService.GetMovieAsync(id);
-                if (movie == null)
-                {
-                    Console.WriteLine("Movie not found.");
-                }
-                else
-                {
-                    Console.Write($"New Title [{movie.Title}]: ");
-                    var title = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(title)) movie.Title = title;
-
-                    Console.Write($"New Genre [{movie.Genre}]: ");
-                    var genre = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(genre)) movie.Genre = genre;
-
-                    Console.Write($"New Price [{movie.Price}]: ");
-                    if (decimal.TryParse(Console.ReadLine(), out decimal price)) movie.Price = price;
-
-                    await _movieService.EditMovieAsync(movie);
-                    Console.WriteLine("\nMovie updated successfully!");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Invalid ID format.");
-            }
-            Console.WriteLine("\nPress any key to return to menu...");
-            Console.ReadKey();
-        }
-
-        private async Task DeleteMovieAsync()
-        {
-            Console.Write("Enter Movie ID to delete: ");
-            if (int.TryParse(Console.ReadLine(), out int id))
-            {
-                var movie = await _movieService.GetMovieAsync(id);
-                if (movie == null)
-                {
-                    Console.WriteLine("Movie not found.");
-                }
-                else
-                {
-                    await _movieService.RemoveMovieAsync(id);
-                    Console.WriteLine("\nMovie deleted successfully!");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Invalid ID format.");
-            }
-            Console.WriteLine("\nPress any key to return to menu...");
+            Console.Clear();
+            Console.WriteLine("--- Actor Management ---");
+            Console.WriteLine("1. View Actors (Placeholder)");
+            Console.WriteLine("Press any key to return...");
             Console.ReadKey();
         }
     }
