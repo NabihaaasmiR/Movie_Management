@@ -6,9 +6,13 @@ using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Register DbContext with SQL Server connection string
+// 1. Retrieve and validate connection string from appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+// Register DbContext with SQL Server configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // 2. Register Repositories and Services for Dependency Injection
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
@@ -32,7 +36,7 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// 3. Register Global Exception Handling Middleware at the top of the pipeline
+// 3. Register Global Exception Handling Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -45,7 +49,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-// 4. Run the Interactive Console Menu Loop on startup
+// 4. Run Interactive Console Menu Loop
 using (var scope = app.Services.CreateScope())
 {
     var menuService = scope.ServiceProvider.GetRequiredService<ConsoleMenuService>();
