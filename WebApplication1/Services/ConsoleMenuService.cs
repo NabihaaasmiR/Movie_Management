@@ -1,5 +1,4 @@
-﻿using WebApplication1.Data;
-using WebApplication1.Models;
+﻿using WebApplication1.Models;
 using WebApplication1.Services;
 
 namespace WebApplication1.Services
@@ -7,12 +6,14 @@ namespace WebApplication1.Services
     public class ConsoleMenuService
     {
         private readonly MovieService _movieService;
-        private readonly ApplicationDbContext _context; // Direct context or service for directors/actors
+        private readonly DirectorService _directorService;
+        private readonly ActorService _actorService;
 
-        public ConsoleMenuService(MovieService movieService, ApplicationDbContext context)
+        public ConsoleMenuService(MovieService movieService, DirectorService directorService, ActorService actorService)
         {
             _movieService = movieService;
-            _context = context;
+            _directorService = directorService;
+            _actorService = actorService;
         }
 
         public async Task RunAsync()
@@ -24,7 +25,7 @@ namespace WebApplication1.Services
                 Console.WriteLine("========================================");
                 Console.WriteLine("       MOVIE MANAGEMENT SYSTEM          ");
                 Console.WriteLine("========================================");
-                Console.WriteLine("1. Manage Movies (CRUD)");
+                Console.WriteLine("1. Manage Movies");
                 Console.WriteLine("2. Manage Directors");
                 Console.WriteLine("3. Manage Actors");
                 Console.WriteLine("4. Exit");
@@ -75,7 +76,7 @@ namespace WebApplication1.Services
                         var movies = await _movieService.GetMoviesAsync();
                         foreach (var m in movies)
                         {
-                            Console.WriteLine($"ID: {m.Id} | Title: {m.Title} | Genre: {m.Genre} | Price: ${m.Price:F2}");
+                            Console.WriteLine($"ID: {m.Id} | Title: {m.Title} | Genre: {m.Genre} | Price: ${m.Price:F2} | Director ID: {m.DirectorId}");
                         }
                         Console.WriteLine("\nPress any key to continue...");
                         Console.ReadKey();
@@ -100,7 +101,7 @@ namespace WebApplication1.Services
                         };
 
                         await _movieService.CreateMovieAsync(movie);
-                        Console.WriteLine("Movie added successfully! Press any key...");
+                        Console.WriteLine("\nMovie added successfully! Press any key...");
                         Console.ReadKey();
                         break;
                     case "3":
@@ -112,20 +113,89 @@ namespace WebApplication1.Services
 
         private async Task ManageDirectorsMenuAsync()
         {
-            Console.Clear();
-            Console.WriteLine("--- Director Management ---");
-            Console.WriteLine("1. View Directors (Placeholder)");
-            Console.WriteLine("Press any key to return...");
-            Console.ReadKey();
+            bool back = false;
+            while (!back)
+            {
+                Console.Clear();
+                Console.WriteLine("--- Director Management ---");
+                Console.WriteLine("1. View All Directors");
+                Console.WriteLine("2. Add New Director");
+                Console.WriteLine("3. Back to Main Menu");
+                Console.Write("\nSelect an option: ");
+
+                var choice = Console.ReadLine();
+                switch (choice)
+                {
+                    case "1":
+                        var directors = await _directorService.GetDirectorsAsync();
+                        foreach (var d in directors)
+                        {
+                            Console.WriteLine($"ID: {d.Id} | Name: {d.Name} | Bio: {d.Bio} | Movies Directed: {d.Movies.Count}");
+                        }
+                        Console.WriteLine("\nPress any key to continue...");
+                        Console.ReadKey();
+                        break;
+                    case "2":
+                        Console.Write("Name: ");
+                        var name = Console.ReadLine() ?? string.Empty;
+                        Console.Write("Bio: ");
+                        var bio = Console.ReadLine() ?? string.Empty;
+
+                        var director = new Director { Name = name, Bio = bio };
+                        await _directorService.CreateDirectorAsync(director);
+                        Console.WriteLine("\nDirector added successfully! Press any key...");
+                        Console.ReadKey();
+                        break;
+                    case "3":
+                        back = true;
+                        break;
+                }
+            }
         }
 
         private async Task ManageActorsMenuAsync()
         {
-            Console.Clear();
-            Console.WriteLine("--- Actor Management ---");
-            Console.WriteLine("1. View Actors (Placeholder)");
-            Console.WriteLine("Press any key to return...");
-            Console.ReadKey();
+            bool back = false;
+            while (!back)
+            {
+                Console.Clear();
+                Console.WriteLine("--- Actor Management ---");
+                Console.WriteLine("1. View All Actors");
+                Console.WriteLine("2. Add New Actor");
+                Console.WriteLine("3. Back to Main Menu");
+                Console.Write("\nSelect an option: ");
+
+                var choice = Console.ReadLine();
+                switch (choice)
+                {
+                    case "1":
+                        var actors = await _actorService.GetActorsAsync();
+                        foreach (var a in actors)
+                        {
+                            Console.WriteLine($"ID: {a.Id} | Name: {a.Name} | DOB: {a.DateOfBirth:yyyy-MM-dd} | Movies Count: {a.MovieActors.Count}");
+                        }
+                        Console.WriteLine("\nPress any key to continue...");
+                        Console.ReadKey();
+                        break;
+                    case "2":
+                        Console.Write("Name: ");
+                        var name = Console.ReadLine() ?? string.Empty;
+
+                        var actor = new Actor
+                        {
+                            Name = name,
+                            DateOfBirth = DateTime.UtcNow.AddYears(-25) // Default placeholder DOB or parse from input
+                        };
+
+                        await _actorService.CreateActorAsync(actor);
+                        Console.WriteLine("\nActor added successfully! Press any key...");
+                        Console.ReadKey();
+                        break;
+                    case "3":
+                        back = true;
+                        break;
+                }
+            }
         }
     }
 }
