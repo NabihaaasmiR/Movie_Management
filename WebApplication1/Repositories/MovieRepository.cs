@@ -14,10 +14,17 @@ namespace WebApplication1.Repositories
         }
 
         public async Task<IEnumerable<Movie>> GetAllMoviesAsync() =>
-            await _context.Movies.ToListAsync();
+            await _context.Movies
+                .Include(m => m.Director)
+                .AsNoTracking()
+                .ToListAsync();
 
         public async Task<Movie?> GetMovieByIdAsync(int id) =>
-            await _context.Movies.FindAsync(id);
+            await _context.Movies
+                .Include(m => m.Director)
+                .Include(m => m.MovieActors)
+                .ThenInclude(ma => ma.Actor)
+                .FirstOrDefaultAsync(m => m.Id == id);
 
         public async Task AddMovieAsync(Movie movie)
         {
