@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
+using WebApplication1.Middleware;
 using WebApplication1.Repositories;
 using WebApplication1.Services;
 
@@ -14,12 +15,14 @@ builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<MovieService>();
 builder.Services.AddScoped<ConsoleMenuService>();
 
-// Optional: Keep API controllers and Swagger configured if you switch back to Web API later
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// 3. Register Global Exception Handling Middleware at the top of the pipeline
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -31,7 +34,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-// 3. Run the Interactive Console Menu Loop on startup
+// 4. Run the Interactive Console Menu Loop on startup
 using (var scope = app.Services.CreateScope())
 {
     var menuService = scope.ServiceProvider.GetRequiredService<ConsoleMenuService>();
