@@ -19,10 +19,11 @@ namespace WebApplication1.Models
 
         public DateTime ReleaseDate { get; set; }
 
-        // Foreign Key
+        // Foreign Key for Director (One-to-Many)
         public int DirectorId { get; set; }
-
-        // Navigation property
         public Director? Director { get; set; }
+
+        // Navigation property for Many-to-Many Actors
+        public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
     }
 }

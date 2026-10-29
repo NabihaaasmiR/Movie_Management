@@ -22,6 +22,27 @@ namespace WebApplication1.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("WebApplication1.Models.Actor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Actors");
+                });
+
             modelBuilder.Entity("WebApplication1.Models.Director", b =>
                 {
                     b.Property<int>("Id")
@@ -78,6 +99,21 @@ namespace WebApplication1.Migrations
                     b.ToTable("Movies");
                 });
 
+            modelBuilder.Entity("WebApplication1.Models.MovieActor", b =>
+                {
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ActorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MovieId", "ActorId");
+
+                    b.HasIndex("ActorId");
+
+                    b.ToTable("MovieActors");
+                });
+
             modelBuilder.Entity("WebApplication1.Models.Movie", b =>
                 {
                     b.HasOne("WebApplication1.Models.Director", "Director")
@@ -89,9 +125,38 @@ namespace WebApplication1.Migrations
                     b.Navigation("Director");
                 });
 
+            modelBuilder.Entity("WebApplication1.Models.MovieActor", b =>
+                {
+                    b.HasOne("WebApplication1.Models.Actor", "Actor")
+                        .WithMany("MovieActors")
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication1.Models.Movie", "Movie")
+                        .WithMany("MovieActors")
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Actor");
+
+                    b.Navigation("Movie");
+                });
+
+            modelBuilder.Entity("WebApplication1.Models.Actor", b =>
+                {
+                    b.Navigation("MovieActors");
+                });
+
             modelBuilder.Entity("WebApplication1.Models.Director", b =>
                 {
                     b.Navigation("Movies");
+                });
+
+            modelBuilder.Entity("WebApplication1.Models.Movie", b =>
+                {
+                    b.Navigation("MovieActors");
                 });
 #pragma warning restore 612, 618
         }
