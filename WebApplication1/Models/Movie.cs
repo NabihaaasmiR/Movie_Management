@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace WebApplication1.Models
 {
@@ -7,23 +8,17 @@ namespace WebApplication1.Models
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(100)]
+        [MaxLength(150)]
         public string Title { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string Genre { get; set; } = string.Empty;
 
-        [Range(0.01, 10000.00)]
-        public decimal Price { get; set; }
+        public int ReleaseYear { get; set; }
 
         public DateTime ReleaseDate { get; set; }
 
-        // Foreign Key for Director (One-to-Many)
-        public int DirectorId { get; set; }
-        public Director? Director { get; set; }
-
-        // Navigation property for Many-to-Many Actors
-        public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
+        [Range(0.0, 10.0)]
+        public decimal Rating { get; set; }
     }
 }
