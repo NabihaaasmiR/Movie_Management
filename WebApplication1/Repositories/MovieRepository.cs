@@ -4,48 +4,42 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Repositories
 {
+    /// <summary>
+    /// Repository implementation for movie data operations.
+    /// </summary>
     public class MovieRepository : IMovieRepository
     {
         private readonly ApplicationDbContext _context;
 
+        /// <summary>
+        /// Initializes a new instance of MovieRepository.
+        /// </summary>
         public MovieRepository(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<Movie>> GetAllMoviesAsync() =>
-            await _context.Movies
+        /// <inheritdoc />
+        public async Task<IEnumerable<Movie>> GetAllAsync()
+        {
+            return await _context.Movies
                 .Include(m => m.Director)
-                .AsNoTracking()
                 .ToListAsync();
+        }
 
-        public async Task<Movie?> GetMovieByIdAsync(int id) =>
-            await _context.Movies
+        /// <inheritdoc />
+        public async Task<Movie?> GetByIdAsync(int id)
+        {
+            return await _context.Movies
                 .Include(m => m.Director)
-                .Include(m => m.MovieActors)
-                .ThenInclude(ma => ma.Actor)
                 .FirstOrDefaultAsync(m => m.Id == id);
+        }
 
-        public async Task AddMovieAsync(Movie movie)
+        /// <inheritdoc />
+        public async Task AddAsync(Movie movie)
         {
             await _context.Movies.AddAsync(movie);
             await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateMovieAsync(Movie movie)
-        {
-            _context.Movies.Update(movie);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteMovieAsync(int id)
-        {
-            var movie = await _context.Movies.FindAsync(id);
-            if (movie != null)
-            {
-                _context.Movies.Remove(movie);
-                await _context.SaveChangesAsync();
-            }
         }
     }
 }

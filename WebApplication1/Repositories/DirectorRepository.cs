@@ -4,22 +4,35 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Repositories
 {
+    /// <summary>
+    /// Repository implementation for director data operations.
+    /// </summary>
     public class DirectorRepository : IDirectorRepository
     {
         private readonly ApplicationDbContext _context;
 
+        /// <summary>
+        /// Initializes a new instance of DirectorRepository.
+        /// </summary>
         public DirectorRepository(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<Director>> GetAllDirectorsAsync() =>
-            await _context.Directors.Include(d => d.Movies).AsNoTracking().ToListAsync();
+        /// <inheritdoc />
+        public async Task<IEnumerable<Director>> GetAllAsync()
+        {
+            return await _context.Directors.ToListAsync();
+        }
 
-        public async Task<Director?> GetDirectorByIdAsync(int id) =>
-            await _context.Directors.Include(d => d.Movies).FirstOrDefaultAsync(d => d.Id == id);
+        /// <inheritdoc />
+        public async Task<Director?> GetByIdAsync(int id)
+        {
+            return await _context.Directors.FindAsync(id);
+        }
 
-        public async Task AddDirectorAsync(Director director)
+        /// <inheritdoc />
+        public async Task AddAsync(Director director)
         {
             await _context.Directors.AddAsync(director);
             await _context.SaveChangesAsync();

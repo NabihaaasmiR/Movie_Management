@@ -1,44 +1,39 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
-using WebApplication1.Middleware;
 using WebApplication1.Repositories;
 using WebApplication1.Services;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Retrieve and validate connection string from appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+// Add services to the container.
+builder.Services.AddControllers();
 
-// Register DbContext with SQL Server configuration
+// Configure Entity Framework Core with SQL Server (LocalDB)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Register Repositories and Services for Dependency Injection
+// Register Repositories and Services for Dependency Injection
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<MovieService>();
+builder.Services.AddScoped<AuditService>();
+builder.Services.AddScoped<DirectorService>(); // Registered to fix the 500 resolution error
 
-builder.Services.AddScoped<IDirectorRepository, DirectorRepository>();
-builder.Services.AddScoped<DirectorService>();
-
-builder.Services.AddScoped<IActorRepository, ActorRepository>();
-builder.Services.AddScoped<ActorService>();
-
-builder.Services.AddScoped<ConsoleMenuService>();
-
-builder.Services.AddControllers();
+// Configure Swagger/OpenAPI with XML documentation support
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 });
 
 var app = builder.Build();
 
-// 3. Register Global Exception Handling Middleware
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -46,12 +41,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseAuthorization();
+
 app.MapControllers();
 
-// 4. Run Interactive Console Menu Loop
-using (var scope = app.Services.CreateScope())
-{
-    var menuService = scope.ServiceProvider.GetRequiredService<ConsoleMenuService>();
-    await menuService.RunAsync();
-}
+app.Run();

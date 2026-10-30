@@ -1,24 +1,32 @@
-﻿using WebApplication1.Models;
-using WebApplication1.Repositories;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApplication1.Data;
+using WebApplication1.Models;
 
 namespace WebApplication1.Services
 {
     public class DirectorService
     {
-        private readonly IDirectorRepository _directorRepository;
+        private readonly ApplicationDbContext _context;
 
-        public DirectorService(IDirectorRepository directorRepository)
+        public DirectorService(ApplicationDbContext context)
         {
-            _directorRepository = directorRepository;
+            _context = context;
         }
 
-        public async Task<IEnumerable<Director>> GetDirectorsAsync() =>
-            await _directorRepository.GetAllDirectorsAsync();
+        public async Task<IEnumerable<Director>> GetDirectorsAsync()
+        {
+            return await _context.Directors.ToListAsync();
+        }
 
-        public async Task<Director?> GetDirectorAsync(int id) =>
-            await _directorRepository.GetDirectorByIdAsync(id);
+        public async Task<Director?> GetDirectorByIdAsync(int id)
+        {
+            return await _context.Directors.FindAsync(id);
+        }
 
-        public async Task CreateDirectorAsync(Director director) =>
-            await _directorRepository.AddDirectorAsync(director);
+        public async Task CreateDirectorAsync(Director director)
+        {
+            _context.Directors.Add(director);
+            await _context.SaveChangesAsync();
+        }
     }
 }

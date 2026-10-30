@@ -3,22 +3,37 @@ using WebApplication1.Repositories;
 
 namespace WebApplication1.Services
 {
+    /// <summary>
+    /// Service responsible for managing actor business logic.
+    /// </summary>
     public class ActorService
     {
         private readonly IActorRepository _actorRepository;
 
+        /// <summary>
+        /// Initializes a new instance of ActorService.
+        /// </summary>
         public ActorService(IActorRepository actorRepository)
         {
             _actorRepository = actorRepository;
         }
 
-        public async Task<IEnumerable<Actor>> GetActorsAsync() =>
-            await _actorRepository.GetAllActorsAsync();
+        /// <summary>Retrieves all actors asynchronously.</summary>
+        public async Task<IEnumerable<Actor>> GetActorsAsync()
+        {
+            return await _actorRepository.GetAllActorsAsync();
+        }
 
-        public async Task<Actor?> GetActorAsync(int id) =>
-            await _actorRepository.GetActorByIdAsync(id);
+        /// <summary>Retrieves an actor by ID asynchronously.</summary>
+        public async Task<Actor?> GetActorByIdAsync(int id)
+        {
+            return await _actorRepository.GetActorByIdAsync(id);
+        }
 
-        public async Task CreateActorAsync(Actor actor) =>
+        /// <summary>Creates a new actor asynchronously.</summary>
+        public async Task CreateActorAsync(Actor actor)
+        {
             await _actorRepository.AddActorAsync(actor);
+        }
     }
 }
